@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leitor de PDF de Exames</title>
+    <!-- Incluindo PDF.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.14.305/pdf.min.js"></script>
+    <style>
+        /* Estilos para o corpo da página */
+        body {
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background: linear-gradient(135deg, #e0eafc, #cfdef3);
+        }
+
+        /* Estilo do container principal */
+        .container {
+            width: 100%;
+            max-width: 600px;
+            padding: 30px;
+            background-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            margin: 20px;
+        }
+
+        /* Estilo do título */
+        h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        /* Estilo dos inputs e botões */
+        input[type="file"] {
+            margin-bottom: 20px;
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #007bff;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #f9f9f9;
+        }
+
+        button {
+            margin-top: 15px;
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #007bff;
+            color: white;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        /* Estilo da caixa de saída de texto */
+        #output {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            height: 200px;
+            overflow-y: auto;
+            background-color: #f9f9f9;
+            white-space: pre-wrap;
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Leitor de PDF de Exames</h2>
+    <input type="file" id="pdfFile" accept="application/pdf" />
+    <button id="saveButton" disabled>Salvar Resultado em Nova Aba</button>
+    <button id="downloadButton" disabled>Baixar Resultado como Arquivo</button>
+    <div id="output">O texto extraído aparecerá aqui...</div>
+</div>
+
+<script>
+    let extractedText = ''; // Variável global para armazenar o texto extraído
+
+    document.getElementById('pdfFile').addEventListener('change', function(event) {
+        const file = event.target.files[0];
+
+        if (file && file.type === 'application/pdf') {
+            const fileReader = new FileReader();
+
+            fileReader.onload = function() {
+                const typedarray = new Uint8Array(this.result);
+
+                pdfjsLib.getDocument(typedarray).promise.then(function(pdf) {
+                    let textOutput = '';
+
+                    // Loop através de todas as páginas do PDF
+                    for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+                        pdf.getPage(pageNum).then(function(page) {
+                            page.getTextContent().then(function(textContent) {
+                                textContent.items.forEach(function(item) {
+                                    textOutput += item.str + ' ';
+                                });
+
+                                // Após ler a última página, exiba o resultado
+                                if (pageNum === pdf.numPages) {
+                                    document.getElementById('output').textContent = textOutput;
+                                    extractedText = textOutput; // Atualiza a variável global com o texto extraído
+                                    document.getElementById('saveButton').disabled = false; // Habilita o botão de salvar
+                                    document.getElementById('downloadButton').disabled = false; // Habilita o botão de download
+                                }
+                            });
+                        });
+                    }
+                });
+            };
+
+            fileReader.readAsArrayBuffer(file);
+        } else {
+            alert('Por favor, selecione um arquivo PDF.');
+        }
+    });
+
+    // Função para salvar o resultado em uma nova aba
+    document.getElementById('saveButton').addEventListener('click', function() {
+        if (extractedText) {
+            const formattedText = extractedText.split(/\r?\n/).map(line => `<p>${line}</p>`).join('');
+            const newWindow = window.open('', '_blank');
+            newWindow.document.write('<html><head><title>Resultado do Exame</title>');
+            newWindow.document.write('<style>body { font-family: Arial, sans-serif; margin: 20px; padding: 0; background-color: #f4f4f9; color: #333; } p { margin: 0 0 15px; line-height: 1.6; }</style>');
+            newWindow.document.write('</head><body>');
+            newWindow.document.write(formattedText);
+            newWindow.document.write('</body></html>');
+            newWindow.document.close();
+        }
+    });
+
+    // Função para baixar o resultado como um arquivo de texto
+    document.getElementById('downloadButton').addEventListener('click', function() {
+        if (extractedText) {
+            const blob = new Blob([extractedText], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'resultado_exame.txt';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+    });
+</script>
+
+</body>
+</html>

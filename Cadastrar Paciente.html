@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <Style>
+body {
+      background-image: url(img/ChatOn\ image.jpg);
+      background-position: left;
+
+
+}
+    </Style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastrar Paciente</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+        .header {
+            background-color: #2c3e50;
+            color: white;
+            padding: 15px;
+            text-align: center;
+        }
+        .container {
+            padding: 20px;
+            flex: 1;
+        }
+        h1 {
+            color: #34495e;
+            text-align: center;
+        }
+        form {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ecf0f1;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+        input, select {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #bdc3c7;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+        .button-group {
+            text-align: center;
+        }
+        .button-group button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 0 5px;
+        }
+        .btn-primary {
+            background-color: #3498db;
+            color: white;
+        }
+        .btn-secondary {
+            background-color: #e74c3c;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h2>Gerenciador de Pacientes</h2>
+    </div>
+
+    <div class="container">
+        <h1>Cadastrar Paciente</h1>
+        <form action="https://api.sheetmonkey.io/form/6X4YEssdduXhB3ZfUYpZHP" method="post">
+            <label for="Nome">Nome Completo</label>
+            <input type="text" id="Nome" name="Nome" required>
+
+            <label for="Data de Nascimento">Data de Nascimento</label>
+            <input type="date" id="Data de Nascimento" name="Data de Nascimento" required>
+
+            <label for="cpf">CPF</label>
+            <input type="text" id="cpf" name="CPF" required>
+
+            <label for="Sexo">Sexo</label>
+            <select id="Sexo" name="Sexo" required>
+                <option value="" disabled selected>Selecione</option>
+                <option value="masculino">Masculino</option>
+                <option value="feminino">Feminino</option>
+                <option value="outro">Outro</option>
+            </select>
+
+            <label for="Telefone">Telefone</label>
+            <input type="text" id="Telefone" name="Telefone" required>
+
+            <label for="Endereco">Endereço</label>
+            <input type="text" id="endereco" name="Endereco" required>
+
+            <div class="button-group">
+                <button type="submit" class="btn-primary">Cadastrar</button>
+                <button type="reset" class="btn-secondary">Limpar</button>
+            </div>
+        </form>
+    </div>
+
+</body>
+</html>

@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leitor de Planilha Excel</title>
+    <!-- Incluindo a biblioteca XLSX a partir do CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <!-- Estilos CSS embutidos para o design da página -->
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+        }
+
+        h1 {
+            color: #4a4a7b;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        #fileInput {
+            display: block;
+            margin: 0 auto;
+            margin-bottom: 20px;
+        }
+
+        #searchInput, #searchButton {
+            padding: 10px;
+            margin-top: 10px;
+        }
+
+        #searchInput {
+            width: 250px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        #searchButton {
+            background-color: #4a4a7b;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        #searchButton:hover {
+            background-color: #3a3a5b;
+        }
+
+        #excelTable {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        #excelTable th, #excelTable td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        #excelTable th {
+            background-color: #4a4a7b;
+            color: white;
+        }
+
+        #searchResults {
+            margin-top: 20px;
+            background-color: #fff;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        li {
+            background-color: #eaeaf1;
+            margin: 5px 0;
+            padding: 10px;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Leitura e Busca Automática de Planilha Excel</h1>
+    <!-- Input para seleção do arquivo Excel -->
+    <input type="file" id="fileInput" accept=".xlsx, .xls" />
+
+    <!-- Input para busca de informações específicas -->
+    <div style="text-align: center;">
+        <input type="text" id="searchInput" placeholder="Digite o nome da coluna ou palavra-chave">
+        <button id="searchButton">Buscar</button>
+    </div>
+
+    <!-- Tabela para exibir o conteúdo da planilha -->
+    <table id="excelTable">
+    </table>
+
+    <!-- Div para exibir os resultados da busca -->
+    <div id="searchResults"></div>
+
+    <script>
+        let jsonData = []; // Variável global para armazenar os dados da planilha
+
+        // Referência ao elemento de input de arquivo
+        const fileInput = document.getElementById('fileInput');
+        const searchInput = document.getElementById('searchInput');
+        const searchButton = document.getElementById('searchButton');
+        const searchResults = document.getElementById('searchResults');
+
+        // Adiciona evento de mudança ao input de arquivo
+        fileInput.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+
+            // Cria um leitor de arquivo
+            const reader = new FileReader();
+
+            // Função que será chamada após o arquivo ser carregado
+            reader.onload = function(e) {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+
+                // Obtém a primeira planilha
+                const firstSheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[firstSheetName];
+
+                // Converte a planilha para JSON
+                jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+
+                // Exibe os dados na tabela HTML
+                displayData(jsonData);
+            };
+
+            // Lê o arquivo Excel como array buffer
+            reader.readAsArrayBuffer(file);
+        });
+
+        // Função para exibir os dados da planilha em uma tabela HTML
+        function displayData(data) {
+            const table = document.getElementById('excelTable');
+            table.innerHTML = ''; // Limpa o conteúdo anterior da tabela
+
+            // Criação do cabeçalho da tabela
+            if (data.length > 0) {
+                const headerRow = document.createElement('tr');
+                data[0].forEach(header => {
+                    const th = document.createElement('th');
+                    th.textContent = header;
+                    headerRow.appendChild(th);
+                });
+                table.appendChild(headerRow);
+            }
+
+            // Criação das linhas da tabela
+            data.slice(1).forEach((row) => {
+                const rowElement = document.createElement('tr');
+
+                row.forEach((cell) => {
+                    const cellElement = document.createElement('td');
+                    cellElement.textContent = cell;
+                    rowElement.appendChild(cellElement);
+                });
+
+                table.appendChild(rowElement);
+            });
+        }
+
+        // Função para buscar dados específicos na planilha
+        searchButton.addEventListener('click', () => {
+            const query = searchInput.value.trim().toLowerCase();
+            if (query === "") {
+                alert("Por favor, digite uma palavra-chave ou nome de coluna para buscar.");
+                return;
+            }
+
+            let results = []; // Armazena os resultados da busca
+            let headerRow = jsonData[0]; // A primeira linha da planilha (cabeçalho)
+            
+            // Verifica se o termo de busca é o nome de uma coluna
+            let columnIndex = headerRow.findIndex(header => header.toLowerCase() === query);
+
+            if (columnIndex !== -1) {
+                // Busca valores na coluna correspondente
+                for (let i = 1; i < jsonData.length; i++) { // Começa a partir de 1 para ignorar o cabeçalho
+                    results.push(jsonData[i][columnIndex]);
+                }
+            } else {
+                // Se não for um nome de coluna, busca valores que contenham o termo
+                jsonData.forEach((row, rowIndex) => {
+                    row.forEach((cell) => {
+                        if (typeof cell === 'string' && cell.toLowerCase().includes(query)) {
+                            results.push(cell);
+                        }
+                    });
+                });
+            }
+
+            // Exibe os resultados da busca
+            displaySearchResults(results);
+        });
+
+        // Função para exibir os resultados da busca
+        function displaySearchResults(results) {
+            searchResults.innerHTML = ''; // Limpa os resultados anteriores
+
+            if (results.length === 0) {
+                searchResults.textContent = "Nenhum resultado encontrado.";
+                return;
+            }
+
+            const resultList = document.createElement('ul');
+            results.forEach(result => {
+                const listItem = document.createElement('li');
+                listItem.textContent = result;
+                resultList.appendChild(listItem);
+            });
+
+            searchResults.appendChild(resultList);
+        }
+    </script>
+</body>
+</html>
